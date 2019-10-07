@@ -7,7 +7,9 @@ import android.widget.TextView;
 
 import io.reactivex.Observable;
 import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -16,6 +18,7 @@ public class MainActivity extends AppCompatActivity {
     private Observable<String> myObservable;
     private Observer<String> myObserver;
     private TextView textView;
+    private Disposable disposable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,10 +28,14 @@ public class MainActivity extends AppCompatActivity {
         textView=findViewById(R.id.tvGreeting);
         myObservable = Observable.just(greeting);
 
+        myObservable.subscribeOn(Schedulers.io());
+        myObservable.observeOn(AndroidSchedulers.mainThread());
+
         myObserver = new Observer<String>(){
             @Override
             public void onSubscribe(Disposable d) {
                 Log.i(TAG, " onSubscribe invoked");
+                disposable = d;
             }
 
             @Override
@@ -49,5 +56,12 @@ public class MainActivity extends AppCompatActivity {
         };
 
         myObservable.subscribe(myObserver);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        disposable.dispose();
     }
 }
